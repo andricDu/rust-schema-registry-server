@@ -1,20 +1,25 @@
 use serde::{Deserialize, Serialize};
 
-#[serde(deny_unknown_fields)]
-#[derive(Debug, Serialize, Deserialize)]
+use crate::schema::schemas;
+
+#[derive(Debug, Serialize, Deserialize, Queryable)]
 pub struct Schema {
-    
     #[serde(default = "default_int")]
-    id: u64,
-
+    pub id: u64,
     #[serde(default = "default_int")]
-    version: u64,
+    pub version: u64,
+    pub subject: String,
+    pub format: String,
+    pub definition: String,
+}
 
-    subject: String,
-
-    format: String,
-
-    definition: String,
+#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone, Serialize, Deserialize, Insertable)]
+#[table_name="schemas"]
+pub struct NewSchema {
+    pub subject: String,
+    pub format: String,
+    pub definition: String,
 }
 
 fn default_int() -> u64 {
