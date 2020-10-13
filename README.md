@@ -1,0 +1,1 @@
+# rust-schema-registry-server
