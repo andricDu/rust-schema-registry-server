@@ -22,7 +22,7 @@ cargo build
 
 ### Diesel CLI for making migrations
 ```bash
-cargo install diesel_cli --no-default-features --features postgres sqlite
+cargo install diesel_cli --no-default-features --features postgres
 ```
 
 If you encounter an error it could be related to not having the postgres development headers. On ubuntu you can install them with the following:
