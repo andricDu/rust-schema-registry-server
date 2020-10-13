@@ -20,7 +20,3 @@ pub struct Schema {
 fn default_int() -> u64 {
     0
 }
-
-fn default_str() -> String {
-    "".to_string()
-}
