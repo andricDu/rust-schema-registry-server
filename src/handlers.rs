@@ -2,7 +2,7 @@ use actix_web::{post, web, Result, HttpResponse, Error};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
 
-use crate::models::{Schema, NewSchema};
+use crate::models::{NewSchema};
 use crate::schema::schemas;
 
 // Who wants to type this out every time???
@@ -15,6 +15,11 @@ pub async fn register(
 ) -> Result<HttpResponse, Error> {
     let conn = pool.get().expect("couldn't get db connection from pool");
 
+    // Short Return on Bad Format
+    if new_schema.format != "avro" {
+        return Ok(HttpResponse::BadRequest().finish())
+    }
+
     let ret_schema = web::block(move || 
         diesel::insert_into(schemas::table).values(&*new_schema).execute(&conn))
         .await
@@ -26,7 +31,6 @@ pub async fn register(
     println!("schema: {:?}", &ret_schema);
     Ok(HttpResponse::Ok().json(ret_schema))
 }
-
 
 //@RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/{subject}/{format}/v{version}")
 //@RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/schemas/{id}")

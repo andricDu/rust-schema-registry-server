@@ -13,6 +13,12 @@ pub struct Schema {
     pub definition: String,
 }
 
+impl PartialEq<Schema> for Schema {
+    fn eq(&self, other: &Schema) -> bool {
+        (self.id == other.id) && (self.version == other.version) && (self.subject == other.subject)
+    }
+}
+
 #[serde(deny_unknown_fields)]
 #[derive(Debug, Clone, Serialize, Deserialize, Insertable)]
 #[table_name="schemas"]
