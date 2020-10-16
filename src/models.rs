@@ -5,9 +5,9 @@ use crate::schema::schemas;
 #[derive(Debug, Serialize, Deserialize, Queryable)]
 pub struct Schema {
     #[serde(default = "default_int")]
-    pub id: u64,
+    pub id: i32,
     #[serde(default = "default_int")]
-    pub version: u64,
+    pub version: i32,
     pub subject: String,
     pub format: String,
     pub definition: String,
@@ -21,13 +21,22 @@ impl PartialEq<Schema> for Schema {
 
 #[serde(deny_unknown_fields)]
 #[derive(Debug, Clone, Serialize, Deserialize, Insertable)]
-#[table_name="schemas"]
+#[table_name = "schemas"]
 pub struct NewSchema {
+    pub version: i32,
     pub subject: String,
     pub format: String,
     pub definition: String,
 }
 
-fn default_int() -> u64 {
+#[serde(deny_unknown_fields)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NewSchemaRequest {
+    pub subject: String,
+    pub format: String,
+    pub definition: String,
+}
+
+fn default_int() -> i32 {
     0
 }

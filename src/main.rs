@@ -1,7 +1,7 @@
 use actix_web::{App, HttpServer};
-use rust_schema_registry_server::handlers::register;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
+use rust_schema_registry_server::handlers::register;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -16,12 +16,8 @@ async fn main() -> std::io::Result<()> {
         .build(manager)
         .expect("Failed to create pool.");
 
-    HttpServer::new(move || {
-        App::new()
-            .data(pool.clone())
-            .service(register)
-    })
-    .bind("127.0.0.1:8080")?
-    .run()
-    .await
+    HttpServer::new(move || App::new().data(pool.clone()).service(register))
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
 }

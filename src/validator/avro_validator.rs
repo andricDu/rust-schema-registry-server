@@ -1,12 +1,12 @@
 extern crate avro_rs;
 
-use avro_rs::Schema;
 use super::super::models;
+use avro_rs::Schema;
 
-pub fn is_valid(definition: String) -> bool {
-    let schema = Schema::parse_str(&definition);
+pub fn is_valid(definition: &String) -> bool {
+    let schema = Schema::parse_str(definition);
     if schema.is_ok() {
-        return true; 
+        return true;
     } else {
         return false;
     }
@@ -14,14 +14,14 @@ pub fn is_valid(definition: String) -> bool {
 
 pub fn get_matching_schema(
     schemas: Vec<&models::Schema>,
-    schema: Schema
+    schema: Schema,
 ) -> Option<&models::Schema> {
     let mut ret: Option<&models::Schema> = None;
 
     for s in schemas {
         let cur_schema = match Schema::parse_str(&s.definition) {
             Ok(cur_schema) => cur_schema,
-            Err(e) => panic!(e)
+            Err(e) => panic!(e),
         };
 
         if cur_schema == schema {
@@ -30,7 +30,7 @@ pub fn get_matching_schema(
     }
 
     ret
-} 
+}
 
 #[cfg(test)]
 mod tests {
@@ -85,13 +85,13 @@ mod tests {
 
     #[test]
     fn test_is_valid() {
-        let valid = is_valid(TEST_SCHEMA_1.to_string());
+        let valid = is_valid(&TEST_SCHEMA_1.to_string());
         assert_eq!(valid, true);
     }
 
     #[test]
     fn test_is_not_valid() {
-        let valid = is_valid(TEST_BAD_SCHEMA_1.to_string());
+        let valid = is_valid(&TEST_BAD_SCHEMA_1.to_string());
         assert_eq!(valid, false);
     }
 
@@ -104,23 +104,22 @@ mod tests {
             version: 1,
             format: "avro".to_string(),
             subject: "test1".to_string(),
-            definition: TEST_SCHEMA_1.to_string()
+            definition: TEST_SCHEMA_1.to_string(),
         };
-        let schema_model_2= models::Schema {
+        let schema_model_2 = models::Schema {
             id: 2,
             version: 1,
             format: "avro".to_string(),
             subject: "test2".to_string(),
-            definition: TEST_SCHEMA_2.to_string()
+            definition: TEST_SCHEMA_2.to_string(),
         };
         let schema_model_3 = models::Schema {
             id: 3,
             version: 1,
             format: "avro".to_string(),
             subject: "test3".to_string(),
-            definition: TEST_SCHEMA_3.to_string()
+            definition: TEST_SCHEMA_3.to_string(),
         };
-
 
         let mut schemas = Vec::new();
         schemas.push(&schema_model_1);
@@ -130,6 +129,4 @@ mod tests {
         let schema = get_matching_schema(schemas, to_find).unwrap();
         assert_eq!(schema, &schema_model_2);
     }
-
 }
-
