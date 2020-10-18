@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::schema::schemas;
 
-#[derive(Debug, Serialize, Deserialize, Queryable)]
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable)]
 pub struct Schema {
     #[serde(default = "default_int")]
     pub id: i32,
