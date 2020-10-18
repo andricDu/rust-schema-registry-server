@@ -12,11 +12,18 @@ pub fn is_valid(definition: &String) -> bool {
     }
 }
 
-pub fn get_matching_schema(
-    schemas: Vec<&models::Schema>,
-    schema: Schema,
-) -> Option<&models::Schema> {
-    let mut ret: Option<&models::Schema> = None;
+pub fn get_matching_schema_from_def<'a>(
+    schemas: Vec<&'a models::Schema>,
+    schema_string: &String,
+) -> Option<&'a models::Schema> {
+    get_matching_schema(schemas, &Schema::parse_str(schema_string).unwrap())
+}
+
+pub fn get_matching_schema<'a>(
+    schemas: Vec<&'a models::Schema>,
+    schema: &Schema,
+) -> Option<&'a models::Schema> {
+    let mut ret: Option<&'a models::Schema> = None;
 
     for s in schemas {
         let cur_schema = match Schema::parse_str(&s.definition) {
@@ -24,7 +31,7 @@ pub fn get_matching_schema(
             Err(e) => panic!(e),
         };
 
-        if cur_schema == schema {
+        if cur_schema == *schema {
             ret = Some(s);
         }
     }
@@ -126,7 +133,7 @@ mod tests {
         schemas.push(&schema_model_2);
         schemas.push(&schema_model_3);
 
-        let schema = get_matching_schema(schemas, to_find).unwrap();
+        let schema = get_matching_schema(schemas, &to_find).unwrap();
         assert_eq!(schema, &schema_model_2);
     }
 }

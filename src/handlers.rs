@@ -54,22 +54,37 @@ fn save_new_schema(
         &new_schema_request.format,
     );
 
-    // TODO: Implement checking of all previous schemas to ensure a duplicate is not being saved. 
-    let mut v = 1;
-    if matching_schemas.len() > 0 {
-        v = matching_schemas.get(0).unwrap().version + 1;
+    let res: Schema;
+
+    if matching_schemas.len() == 0 {
+        let new_schema = NewSchema {
+            version: 1,
+            format: new_schema_request.format,
+            subject: new_schema_request.subject,
+            definition: new_schema_request.definition,
+        };
+        res = diesel::insert_into(schemas::table)
+            .values(new_schema)
+            .get_result(&conn)?;
+    } else {
+        res = match avro_validator::get_matching_schema_from_def(
+            matching_schemas.iter().collect(),
+            &new_schema_request.definition,
+        ) {
+            Some(s) => s.clone(),
+            None => {
+                let new_schema = NewSchema {
+                    version: matching_schemas.last().unwrap().version + 1,
+                    format: new_schema_request.format,
+                    subject: new_schema_request.subject,
+                    definition: new_schema_request.definition,
+                };
+                diesel::insert_into(schemas::table)
+                    .values(new_schema)
+                    .get_result(&conn)?
+            }
+        };
     }
-
-    let new_schema = NewSchema {
-        version: v,
-        format: new_schema_request.format,
-        subject: new_schema_request.subject,
-        definition: new_schema_request.definition,
-    };
-
-    let res = diesel::insert_into(schemas::table)
-        .values(new_schema)
-        .get_result(&conn)?;
 
     Ok(res)
 }
