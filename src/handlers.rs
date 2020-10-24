@@ -38,7 +38,7 @@ pub async fn register(
 }
 
 #[get("/{subject}/{format}/v{version}")]
-pub async fn find_one(
+pub async fn find_by_content_type(
     pool: web::Data<DbPool>,
     path_params: web::Path<(String, String, i32)>,
 ) -> Result<HttpResponse, Error> {
@@ -49,14 +49,32 @@ pub async fn find_one(
 
     let conn = pool.get().expect("couldn't get db connection from pool");
 
-    let schema_opt = web::block(move || find_schema(&conn, sub, fmt, ver))
+    let ret_schema = web::block(move || find_schema(&conn, sub, fmt, ver))
         .await
         .map_err(|e| {
             eprintln!("{}", e);
             HttpResponse::InternalServerError().finish()
         })?;
 
-    Ok(HttpResponse::Ok().json(schema_opt))
+    Ok(HttpResponse::Ok().json(ret_schema))
+}
+
+#[get("/schemas/{id}")]
+pub async fn find_one(
+    pool: web::Data<DbPool>,
+    path_params: web::Path<i32>,
+) -> Result<HttpResponse, Error> {
+    let key = path_params.0;
+
+    let conn = pool.get().expect("couldn't get db connection from pool");
+    let ret_schema = web::block(move || find_by_id(&conn, key))
+        .await
+        .map_err(|e| {
+            eprintln!("{}", e);
+            HttpResponse::InternalServerError().finish()
+        })?;
+
+    Ok(HttpResponse::Ok().json(ret_schema))
 }
 
 //@RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/schemas/{id}")
@@ -134,4 +152,8 @@ fn find_schema(
         .filter(version.eq(ver))
         .limit(1)
         .first::<Schema>(conn)
+}
+
+fn find_by_id(conn: &DbConn, key: i32) -> Result<Schema, diesel::result::Error> {
+    schemas.find(key).first::<Schema>(conn)
 }

@@ -2,7 +2,7 @@ use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
-use rust_schema_registry_server::handlers::{find_one, register};
+use rust_schema_registry_server::handlers::{find_by_content_type, find_one, register};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -25,6 +25,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(Logger::default())
             .data(pool.clone())
             .service(register)
+            .service(find_by_content_type)
             .service(find_one)
     })
     .bind("127.0.0.1:8080")?

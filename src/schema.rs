@@ -1,5 +1,5 @@
 table! {
-    schemas (id, version) {
+    schemas (id) {
         id -> Int4,
         version -> Int4,
         subject -> Varchar,
