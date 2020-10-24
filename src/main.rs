@@ -1,11 +1,15 @@
+use actix_web::middleware::Logger;
 use actix_web::{App, HttpServer};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager};
-use rust_schema_registry_server::handlers::register;
+use rust_schema_registry_server::handlers::{find_one, register};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    std::env::set_var("RUST_LOG", "actix_web=debug");
+    std::env::set_var(
+        "RUST_LOG",
+        "rust_schema_registry_server=debug,actix_web=debug",
+    );
     env_logger::init();
     dotenv::dotenv().ok();
 
@@ -16,8 +20,14 @@ async fn main() -> std::io::Result<()> {
         .build(manager)
         .expect("Failed to create pool.");
 
-    HttpServer::new(move || App::new().data(pool.clone()).service(register))
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await
+    HttpServer::new(move || {
+        App::new()
+            .wrap(Logger::default())
+            .data(pool.clone())
+            .service(register)
+            .service(find_one)
+    })
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
 }

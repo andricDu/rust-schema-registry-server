@@ -1,6 +1,7 @@
-use actix_web::{post, web, Error, HttpResponse, Result};
+use actix_web::{get, post, web, Error, HttpResponse, Result};
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, PooledConnection};
+use log::debug;
 
 use crate::models::{NewSchema, NewSchemaRequest, Schema};
 use crate::schema::schemas;
@@ -36,7 +37,28 @@ pub async fn register(
     Ok(HttpResponse::Ok().json(ret_schema))
 }
 
-//@RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/{subject}/{format}/v{version}")
+#[get("/{subject}/{format}/v{version}")]
+pub async fn find_one(
+    pool: web::Data<DbPool>,
+    path_params: web::Path<(String, String, i32)>,
+) -> Result<HttpResponse, Error> {
+    let path = path_params.into_inner();
+    let sub = path.0;
+    let fmt = path.1;
+    let ver = path.2;
+
+    let conn = pool.get().expect("couldn't get db connection from pool");
+
+    let schema_opt = web::block(move || find_schema(&conn, sub, fmt, ver))
+        .await
+        .map_err(|e| {
+            eprintln!("{}", e);
+            HttpResponse::InternalServerError().finish()
+        })?;
+
+    Ok(HttpResponse::Ok().json(schema_opt))
+}
+
 //@RequestMapping(method = RequestMethod.GET, produces = "application/json", path = "/schemas/{id}")
 //@GetMapping(produces = APPLICATION_JSON_VALUE, path = "/{subject}/{format}")
 //@RequestMapping(value = "/{subject}/{format}/v{version}", method = RequestMethod.DELETE)
@@ -73,6 +95,7 @@ fn save_new_schema(
         ) {
             Some(s) => s.clone(),
             None => {
+                debug!("This is a new schema: {0}", new_schema_request.subject);
                 let new_schema = NewSchema {
                     version: matching_schemas.last().unwrap().version + 1,
                     format: new_schema_request.format,
@@ -97,4 +120,18 @@ fn get_by_subject_and_format_ordered(conn: &DbConn, sub: &String, fmt: &String) 
         .limit(1)
         .load::<Schema>(conn)
         .unwrap()
+}
+
+fn find_schema(
+    conn: &DbConn,
+    sub: String,
+    fmt: String,
+    ver: i32,
+) -> Result<Schema, diesel::result::Error> {
+    schemas
+        .filter(subject.eq(sub))
+        .filter(format.eq(fmt))
+        .filter(version.eq(ver))
+        .limit(1)
+        .first::<Schema>(conn)
 }
